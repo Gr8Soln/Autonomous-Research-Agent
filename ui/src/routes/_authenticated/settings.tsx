@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useSession } from "@/lib/use-session";
-import { supabase } from "@/integrations/supabase/client";
 import { Panel, PanelHeader, PanelTitle } from "@/components/surfaces/Panel";
 import { Button } from "@/components/ui/button";
 
@@ -13,7 +12,7 @@ export const Route = createFileRoute("/_authenticated/settings")({
 
 function SettingsPage() {
   const { session } = useSession();
-  const user = session?.user;
+  const user = session?.user ?? null;
 
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-10 md:px-10">

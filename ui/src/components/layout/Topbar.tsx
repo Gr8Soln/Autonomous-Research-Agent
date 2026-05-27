@@ -2,7 +2,6 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { ChevronRight, Command, LogOut, Menu, User } from "lucide-react";
 import { useAppSidebar } from "./AppShell";
 import { useSession } from "@/lib/use-session";
-import { supabase } from "@/integrations/supabase/client";
 import { projectBySlug } from "@/lib/projects";
 import {
   DropdownMenu,
@@ -85,7 +84,7 @@ export function Topbar() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => supabase.auth.signOut()}>
+            <DropdownMenuItem onClick={() => {}}>
               <LogOut className="mr-2 h-3.5 w-3.5" />
               Sign out
             </DropdownMenuItem>

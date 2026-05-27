@@ -1,5 +1,6 @@
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
+
 import { AuthBackdrop } from "@/components/auth/AuthBackdrop";
 import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import { useSession } from "@/lib/use-session";

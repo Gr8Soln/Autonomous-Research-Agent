@@ -8,15 +8,15 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from './routes/__root.tsx'
-import { Route as LoginRouteImport } from './routes/login.tsx'
-import { Route as AuthenticatedRouteImport } from './routes/_authenticated.tsx'
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as SystemsIndexRouteImport } from './routes/systems.index.tsx'
-import { Route as SystemsSlugRouteImport } from './routes/systems.$slug.tsx'
-import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings.tsx'
-import { Route as AuthenticatedLabRouteImport } from './routes/_authenticated/lab.tsx'
-import { Route as AuthenticatedLabSlugRouteImport } from './routes/_authenticated/lab.$slug.tsx'
+import { Route as SystemsIndexRouteImport } from './routes/systems.index'
+import { Route as SystemsSlugRouteImport } from './routes/systems.$slug'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedLabRouteImport } from './routes/_authenticated/lab'
+import { Route as AuthenticatedLabSlugRouteImport } from './routes/_authenticated/lab.$slug'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',

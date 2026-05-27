@@ -1,5 +1,6 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
+
 import { projectBySlug } from "@/lib/projects";
 import { StatusDot } from "@/components/surfaces/StatusDot";
 import { CapabilityTag } from "@/components/project/CapabilityTag";
