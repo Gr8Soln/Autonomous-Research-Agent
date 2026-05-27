@@ -1,6 +1,6 @@
-# Autonomous AI Systems
+# autonomous-ai-systems
 
-> An engineering laboratory for production-inspired autonomous AI architectures. Graph-based agents, orchestration engines, reasoning systems, and tool-augmented LLM workflows - built with systems engineering discipline.
+> An engineering laboratory for production-inspired autonomous AI architectures. Graph-based agents, orchestration engines, reasoning systems, and tool-augmented LLM workflows — built with systems engineering discipline.
 
 ---
 
@@ -114,18 +114,30 @@ The projects in this repository start at Level 4 and aim toward Level 5. Not bec
 
 ---
 
-## Current Projects
+## Projects
 
-### [autonomous-research-agent](./autonomous-research-agent/)
+```
+autonomous-ai-systems/
+├── README.md                        ← you are here
+├── autonomous-research-agent/       ← ✅ complete
+├── multi-agent-orchestration/       ← 📍 next
+├── codebase-intelligence-agent/     ← 📍 planned
+├── ai-observability-agent/          ← 📍 planned
+└── streaming-agent-runtime/         ← 📍 planned
+```
 
-A graph-based autonomous research system. Accepts a research topic, decomposes it into subproblems, routes tool execution dynamically across web search / calculator / reasoning tools, evaluates information quality with a structured LLM evaluator, loops until research is sufficient, and synthesizes a final structured report.
+---
+
+### ✅ [autonomous-research-agent](./autonomous-research-agent/)
+
+A graph-based autonomous research system. Accepts a research topic, decomposes it into subproblems, routes tool execution dynamically across web search / calculator / reasoning tools, evaluates information quality iteratively, loops until research is sufficient, and synthesizes a final structured report — without human intervention at any step.
 
 **Core concepts demonstrated:**
-- Planner / executor / evaluator separation
+- Planner / executor / evaluator node separation
 - Typed state management with Pydantic
-- LangGraph stateful execution graph with cycles
+- LangGraph stateful execution graph with bounded cycles
 - Structured LLM output with validation-feedback retry
-- Tool registry pattern with schema validation
+- Tool registry pattern with schema-level input validation
 - Async background execution with PostgreSQL checkpointing
 - Redis tool result caching
 - SSE streaming of graph progress
@@ -134,27 +146,63 @@ A graph-based autonomous research system. Accepts a research topic, decomposes i
 
 ---
 
-## Roadmap
+### 📍 multi-agent-orchestration
 
-The following systems are planned. Each explores a distinct problem space in autonomous AI architecture.
+Multiple specialized agents operating in parallel, coordinated by a supervisor graph. Each agent owns a specific capability domain — research, analysis, critique, synthesis — and the supervisor delegates, aggregates results, and resolves conflicts when agents disagree.
 
-### multi-agent-orchestration-system
-Multiple specialized agents operating in parallel, coordinated by a supervisor. Explores inter-agent communication, work delegation, result aggregation, and conflict resolution when agents disagree. The engineering question: how do you coordinate autonomous workers who each have partial information?
+The engineering question this project addresses: how do you coordinate autonomous workers who each have partial information, may produce contradictory outputs, and operate concurrently on overlapping state?
 
-### adaptive-workflow-engine
-A workflow engine that modifies its own execution plan mid-run based on intermediate results. Not a fixed DAG — a graph that rewrites itself. Explores dynamic planning, plan validation, rollback, and the boundary between flexibility and chaos.
+**Core concepts to be demonstrated:**
+- Supervisor / worker agent graph topology
+- LangGraph `Send` API for true parallel agent fan-out
+- Inter-agent result aggregation with conflict resolution
+- Shared vs. isolated state across concurrent agent runs
+- Partial failure handling when one agent in a group fails
 
-### tool-augmented-reasoning-system
-Deep reasoning over structured and unstructured data using a layered tool architecture. Multi-hop reasoning chains. Self-consistency checking. Explores how to build systems that reason rather than retrieve — and how to know when reasoning has gone wrong.
+---
 
-### llm-evaluation-framework
-A system for evaluating other LLM-based systems. Automated test case generation, behavioral regression testing, prompt sensitivity analysis. The engineering question: how do you build a reliable test suite for a non-deterministic system?
+### 📍 codebase-intelligence-agent
 
-### streaming-agent-runtime
-Real-time agent execution with streaming intermediate outputs, live state inspection, and client-side progress rendering. Explores the intersection of event-driven architecture and autonomous execution.
+An autonomous agent that reasons over a codebase — not just retrieves from it. Given a question about a system ("why does this service fail under high load?", "what would break if I changed this interface?"), the agent traverses the codebase graph, traces dependencies, executes targeted analysis tools, and produces a structured technical assessment.
 
-### memory-augmented-agent
-Long-running agent with persistent memory across sessions. Episodic recall, knowledge consolidation, memory retrieval strategies. Explores what "memory" means architecturally in a stateless LLM system — and how to build it without a vector database becoming a crutch.
+The engineering question: how do you build an agent that reasons about structure rather than just surfacing text? Code is not a document — it is a graph of dependencies, call sites, type contracts, and behavioral invariants. The agent architecture must reflect that.
+
+**Core concepts to be demonstrated:**
+- Code graph traversal as a tool primitive
+- Multi-hop reasoning across dependency chains
+- Static analysis tool integration (AST parsing, type checking, import tracing)
+- Confidence-weighted finding aggregation across heterogeneous tool outputs
+- Structured technical report generation with traceable evidence
+
+---
+
+### 📍 ai-observability-agent
+
+An autonomous agent that monitors, diagnoses, and explains the behavior of other AI systems. Given access to LLM traces, agent execution logs, and evaluation results, it identifies behavioral regressions, anomalous routing patterns, cost spikes, and quality degradations — and produces a diagnostic report with root cause hypotheses.
+
+The engineering question: what does observability mean when the system being observed is itself non-deterministic? Traditional anomaly detection assumes stable baselines. LLM behavior drifts with model updates, prompt changes, and input distribution shifts. The agent must reason about non-stationarity, not just threshold violations.
+
+**Core concepts to be demonstrated:**
+- Trace ingestion and structured parsing from LangSmith / OpenTelemetry
+- Behavioral baseline modeling over rolling windows
+- Anomaly classification: routing anomalies vs. quality degradations vs. cost anomalies
+- Hypothesis generation with supporting evidence from trace data
+- Recursive evaluation: an AI system evaluating AI systems
+
+---
+
+### 📍 streaming-agent-runtime
+
+A real-time agent execution runtime with streaming intermediate outputs, live state inspection, and reactive client-side rendering. The focus is the execution infrastructure, not the agent logic: how do you make a long-running autonomous process feel responsive, inspectable, and controllable to an operator watching it run?
+
+The engineering question: what does the interface between an autonomous execution graph and a real-time client look like when the graph is stateful, non-deterministic, and potentially running for minutes?
+
+**Core concepts to be demonstrated:**
+- LangGraph checkpoint-driven SSE event stream
+- Node-level event schema design for client consumption
+- Backpressure handling in async event generators
+- Client-side state reconstruction from event stream
+- Mid-run intervention: pause, inspect, resume, abort
 
 ---
 
@@ -177,20 +225,6 @@ These principles apply across every project in this repository:
 **Observability is not optional.** Every run produces structured logs with correlation IDs. Every LLM call is traceable. Every state transition is checkpointed. You cannot improve what you cannot observe.
 
 ---
-
-## Repository Structure
-
-```
-autonomous-ai-systems/
-├── README.md                        ← you are here
-├── autonomous-research-agent/       ← Project 1: ✅
-├── multi-agent-orchestration/       ← planned
-├── codebase-intelligence-agent/        ← planned
-├── ai-observability-agent/        ← planned
-├── llm-evaluation-framework/        ← planned
-├── streaming-agent-runtime/         ← planned
-└── memory-augmented-agent/          ← planned
-```
 
 Each project is a self-contained system with its own stack, README, and test suite. Projects share design philosophy but are not architecturally coupled.
 
