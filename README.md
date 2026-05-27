@@ -1,4 +1,4 @@
-# autonomous-ai-systems
+# Autonomous AI Systems
 
 > An engineering laboratory for production-inspired autonomous AI architectures. Graph-based agents, orchestration engines, reasoning systems, and tool-augmented LLM workflows — built with systems engineering discipline.
 
