@@ -128,7 +128,7 @@ autonomous-ai-systems/
 
 ---
 
-### ✅ [autonomous-research-agent](./autonomous-research-agent/)
+### ✅ [Autonomous Research Agent](./autonomous-research-agent/README.md)
 
 A graph-based autonomous research system. Accepts a research topic, decomposes it into subproblems, routes tool execution dynamically across web search / calculator / reasoning tools, evaluates information quality iteratively, loops until research is sufficient, and synthesizes a final structured report — without human intervention at any step.
 
@@ -146,7 +146,7 @@ A graph-based autonomous research system. Accepts a research topic, decomposes i
 
 ---
 
-### 📍 multi-agent-orchestration
+### 📍 [Multi-Agent Orchestration](./multi-agent-orchestration/README.md)
 
 Multiple specialized agents operating in parallel, coordinated by a supervisor graph. Each agent owns a specific capability domain — research, analysis, critique, synthesis — and the supervisor delegates, aggregates results, and resolves conflicts when agents disagree.
 
@@ -161,7 +161,7 @@ The engineering question this project addresses: how do you coordinate autonomou
 
 ---
 
-### 📍 codebase-intelligence-agent
+### 📍 [Codebase Intelligence Agent](./codebase-intelligence-agent/README.md)
 
 An autonomous agent that reasons over a codebase — not just retrieves from it. Given a question about a system ("why does this service fail under high load?", "what would break if I changed this interface?"), the agent traverses the codebase graph, traces dependencies, executes targeted analysis tools, and produces a structured technical assessment.
 
@@ -176,7 +176,7 @@ The engineering question: how do you build an agent that reasons about structure
 
 ---
 
-### 📍 ai-observability-agent
+### 📍 [AI Observability Agent](./ai-observability-agent/README.md)
 
 An autonomous agent that monitors, diagnoses, and explains the behavior of other AI systems. Given access to LLM traces, agent execution logs, and evaluation results, it identifies behavioral regressions, anomalous routing patterns, cost spikes, and quality degradations — and produces a diagnostic report with root cause hypotheses.
 
@@ -191,7 +191,7 @@ The engineering question: what does observability mean when the system being obs
 
 ---
 
-### 📍 streaming-agent-runtime
+### 📍 [Streaming Agent Runtime](./streaming-agent-runtime/README.md)
 
 A real-time agent execution runtime with streaming intermediate outputs, live state inspection, and reactive client-side rendering. The focus is the execution infrastructure, not the agent logic: how do you make a long-running autonomous process feel responsive, inspectable, and controllable to an operator watching it run?
 
