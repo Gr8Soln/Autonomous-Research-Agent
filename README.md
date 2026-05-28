@@ -1,264 +1,365 @@
-# Autonomous AI Systems
+# Autonomous Research Agent
 
-> An engineering laboratory for production-inspired autonomous AI architectures. Graph-based agents, orchestration engines, reasoning systems, and tool-augmented LLM workflows — built with systems engineering discipline.
-
----
-
-## What This Repository Is
-
-This is not a collection of demos. It is not a prompt engineering playground. It is not a wrapper around an LLM API with a chatbot interface.
-
-This repository is an **ongoing engineering practice** — a place where autonomous AI systems are designed, built, and studied with the same discipline applied to distributed systems, data pipelines, and production backend infrastructure.
-
-Every project here starts from a real systems engineering question:
-
-- How do you build an agent that terminates reliably?
-- How do you separate planning from execution in a non-deterministic system?
-- How do you make an LLM-driven workflow observable, debuggable, and resumable?
-- How do you design a control loop that degrades gracefully rather than hallucinating its way to a confident wrong answer?
-
-The answers require **systems thinking**, not prompt engineering.
+> A graph-based autonomous AI research system built with LangGraph, FastAPI, and OpenAI. Accepts a research topic, decomposes it into subproblems, routes tool execution dynamically, evaluates information quality iteratively, and synthesizes a structured report — without human intervention at any step.
 
 ---
 
-## The Philosophy
+## What This Is
 
-### AI systems engineering is not the same as AI application development
+This is not a chatbot with tools bolted on. It is a **stateful execution graph** where an LLM acts as a control plane — making planning and routing decisions — while deterministic Python orchestrates when, how, and whether to continue executing.
 
-Most AI projects are integration projects. They call an LLM API, render the output, and ship. That work has value — but it is distinct from *systems engineering*, which asks:
-
-- What is the execution model?
-- How does state flow through the system?
-- Where are the failure boundaries?
-- What are the termination guarantees?
-- How does the system behave at the edges?
-
-The gap between these two mindsets is significant. An LLM wrapper can be built in an afternoon. An autonomous system that executes reliably, observably, and gracefully under failure conditions is a real engineering problem.
-
-This repository lives in the second category.
-
-### The problem with most AI agents
-
-Most AI agents fail in production for the same reasons distributed systems failed before engineers developed proper patterns for them:
-
-**Implicit state.** State lives in conversation history rather than a typed, inspectable data structure. When something goes wrong, there is nothing to observe.
-
-**No execution model.** The agent "loops" because the prompt says to loop. There are no iteration ceilings, no per-task attempt limits, no provable termination conditions. The loop runs until the context window fills or the user gives up.
-
-**Coupled concerns.** Planning, tool selection, execution, and evaluation happen in a single prompt. When the system misbehaves, you cannot isolate which concern is failing.
-
-**Non-deterministic routing.** The LLM decides what to do next by outputting text like "CONTINUE" or "DONE". The application parses this and branches. The routing logic is inside the model, invisible to the engineer.
-
-**No failure envelope.** Tool errors crash the agent. LLM validation failures crash the agent. Network timeouts crash the agent. There is no error state, no recovery path, no graceful degradation.
-
-The systems in this repository are designed to address each of these failure modes explicitly.
-
-### Why graph-based workflows
-
-A graph is the right abstraction for autonomous AI execution because it makes the execution model explicit and inspectable.
-
-In a graph-based workflow:
-- Every processing step is a named node with a defined input/output contract
-- State flows through edges, not through implicit context
-- Routing decisions are expressed as conditional edges, not as free-form LLM output
-- The topology is a first-class artifact you can reason about, test, and visualize
-- Cycles are intentional and bounded — not an accident of prompt engineering
-
-The graph is not just a code pattern. It is the **specification** of how the system executes. When the system behaves unexpectedly, you look at the graph. When you want to change behavior, you change the graph. When you want to test the system, you test the graph topology independently of any LLM call.
-
-This is why LangGraph — despite its learning curve — is the right tool for this problem. It makes cycles, state checkpointing, and conditional routing first-class primitives rather than things you bolt on after the fact.
-
-### Deterministic orchestration around non-deterministic models
-
-The central engineering tension in autonomous AI systems: the component doing the most consequential work (the LLM) is the least reliable component in the system.
-
-The architecture responds to this tension by **constraining what the LLM decides**. LLM calls are narrow, output-validated, and surrounded by deterministic guards:
-
-- The LLM judges research sufficiency. Python decides whether to loop.
-- The LLM selects a tool name. Pydantic validates it against the registry.
-- The LLM produces a research plan. Python enforces subproblem count, uniqueness, and iteration budgets.
-- The LLM synthesizes findings. The Synthesizer receives only validated, structured input.
-
-The LLM is a powerful but unreliable worker. The orchestration layer is the reliable employer. The system works because the employer never trusts the worker blindly.
-
-### On engineering maturity in AI systems
-
-There is a maturity gradient in AI systems work:
-
-```
-Level 1 — API integration
-  Call LLM. Render output. Ship.
-  No state management. No failure handling. No architecture.
-
-Level 2 — Prompt engineering
-  Chain prompts. Use few-shot examples. Tune temperature.
-  Still no execution model. State lives in strings.
-
-Level 3 — Tool augmentation
-  Connect LLM to external tools. Parse structured outputs.
-  Beginning of real engineering concerns.
-
-Level 4 — Agent orchestration
-  Stateful execution loops. Typed state management.
-  Failure envelopes. Termination guarantees.
-  This is where systems engineering begins.
-
-Level 5 — Production AI systems
-  Observability, checkpointing, resume-on-crash.
-  Distributed execution. Audit trails. Cost tracking.
-  Graceful degradation. Parallel workloads.
-  This is where backend engineering discipline meets AI.
-```
-
-The projects in this repository start at Level 4 and aim toward Level 5. Not because Level 5 has more lines of code — but because the engineering problems at that level are genuinely interesting and poorly understood.
+The system is designed around a fundamental architectural principle: **LLMs are unreliable workers but reasonable judges**. The graph exploits this by keeping LLM calls narrow and output-validated, while all state transitions, loop termination, and failure handling are owned by deterministic code.
 
 ---
 
-## Projects
+## Architecture
+
+### Execution Flow
 
 ```
-autonomous-ai-systems/
-├── README.md                        ← you are here
-├── autonomous-research-agent/       ← ✅ complete
-├── multi-agent-orchestration/       ← 📍 next
-├── codebase-intelligence-agent/     ← 📍 planned
-├── ai-observability-agent/          ← 📍 planned
-└── streaming-agent-runtime/         ← 📍 planned
+┌─────────────────────────────────────────────────────────────────┐
+│                    ResearchState (Pydantic)                      │
+│         Shared across all nodes — single source of truth         │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                    ┌─────────▼─────────┐
+                    │     PLANNER       │  LLM call
+                    │                   │  topic → subproblems[]
+                    │  - Decomposes     │  - Sets max_iterations
+                    │    topic into     │  - Expands objective
+                    │    3-6 questions  │
+                    └─────────┬─────────┘
+                              │ next_action = "select_tool"
+                              │
+              ┌───────────────▼───────────────┐
+              │         TOOL SELECTOR          │  LLM call
+              │                               │  subproblem + registry
+              │  - Reads tool registry        │  → tool_name + input
+              │  - Registry validates name    │
+              │  - Input schema validated     │
+              └───────────────┬───────────────┘
+                              │ next_action = "execute_tool"
+                              │
+              ┌───────────────▼───────────────┐
+              │        TOOL EXECUTOR           │  No LLM
+              │                               │  Pure dispatch
+              │  - Redis cache check          │
+              │  - Tool dispatch              │
+              │  - Records ToolCall           │
+              │  - Produces ResearchFinding   │
+              │  - Increments iterations      │
+              └───────────────┬───────────────┘
+                              │ next_action = "evaluate"
+                              │
+              ┌───────────────▼───────────────┐
+              │          EVALUATOR             │  LLM call
+              │                               │  findings → judgment
+              │  ┌────────────────────────┐   │
+              │  │  Guard 1: ceiling hit? │   │  Deterministic guards
+              │  │  Guard 2: all done?    │   │  run BEFORE LLM
+              │  │  Guard 3: no findings? │   │
+              │  └────────────────────────┘   │
+              │                               │
+              │  LLM: confidence score +      │
+              │       is_sufficient bool      │
+              │                               │
+              │  Routing decision (Python):   │
+              │  - sufficient → advance/synth │
+              │  - insufficient + attempts    │
+              │    remain → select_tool       │
+              │  - max attempts → best-effort │
+              └───────────────┬───────────────┘
+                              │
+           ┌──────────────────┼──────────────────┐
+           │                  │                  │
+    more subproblems    same subproblem    all subproblems
+    pending             needs more tools  resolved OR ceiling
+           │                  │                  │
+           └──────────►  [LOOP] ◄────────────────┘
+                              │
+                    (when terminal condition)
+                              │
+                    ┌─────────▼─────────┐
+                    │    SYNTHESIZER     │  LLM call
+                    │                   │  all findings →
+                    │  - Structured      │  structured report
+                    │    report output   │
+                    │  - Honest about    │
+                    │    gaps/failures   │
+                    │  - Markdown format │
+                    └─────────┬─────────┘
+                              │
+                           [ END ]
+                              │
+                    final_report in state
+```
+
+### Termination Guarantees
+
+The loop cannot run forever. Every iteration increments `state.iterations` by exactly 1 (Tool Executor). The Evaluator checks `iterations >= max_iterations` before any LLM call. Each subproblem has an independent attempt ceiling (`max_attempts=3`). Both ceilings degrade toward termination on every cycle — provable by inspection of the state machine.
+
+### State Model
+
+All nodes communicate through a single typed state object. No implicit coupling. No side channels.
+
+```
+ResearchState
+├── topic, objective                    ← input
+├── subproblems[]                       ← planning output
+│   └── ResearchSubproblem
+│       ├── id, question, status
+│       ├── confidence, attempts
+│       └── findings[]
+├── tool_calls[]                        ← execution history
+│   └── ToolCall (id, input, output, error, duration_ms)
+├── findings[]                          ← interpreted results
+│   └── ResearchFinding (content, source, relevance_score)
+├── evaluation_history[]                ← evaluator audit log
+│   └── EvaluationResult (confidence, reasoning, gaps)
+├── iterations, max_iterations          ← loop control
+├── sufficient, completion_reason       ← termination signals
+├── selected_tool, selected_tool_input  ← selector→executor handoff
+├── errors[], has_fatal_error           ← error envelope
+├── next_action                         ← routing signal
+└── final_report                        ← output
 ```
 
 ---
 
-### ✅ [Autonomous Research Agent](./autonomous-research-agent/README.md)
+## Stack
 
-A graph-based autonomous research system. Accepts a research topic, decomposes it into subproblems, routes tool execution dynamically across web search / calculator / reasoning tools, evaluates information quality iteratively, loops until research is sufficient, and synthesizes a final structured report — without human intervention at any step.
-
-**Core concepts demonstrated:**
-- Planner / executor / evaluator node separation
-- Typed state management with Pydantic
-- LangGraph stateful execution graph with bounded cycles
-- Structured LLM output with validation-feedback retry
-- Tool registry pattern with schema-level input validation
-- Async background execution with PostgreSQL checkpointing
-- Redis tool result caching
-- SSE streaming of graph progress
-
-**Stack:** Python · LangGraph · FastAPI · OpenAI · Pydantic · PostgreSQL · Redis
+| Layer | Technology | Role |
+|---|---|---|
+| Graph engine | LangGraph | Stateful execution graph, checkpointing |
+| API | FastAPI | Async HTTP, background task execution |
+| LLM | OpenAI GPT-4o | Planner, selector, evaluator, synthesizer |
+| State validation | Pydantic v2 | Input/output contracts on every LLM call |
+| Persistence | PostgreSQL | Run records + LangGraph checkpoint store |
+| Cache | Redis | Tool result deduplication |
+| Tracing | LangSmith | Full graph trace per run |
+| Search | Tavily | Web search tool |
 
 ---
 
-### 📍 [Multi-Agent Orchestration](./multi-agent-orchestration/README.md)
+## Tools
 
-Multiple specialized agents operating in parallel, coordinated by a supervisor graph. Each agent owns a specific capability domain — research, analysis, critique, synthesis — and the supervisor delegates, aggregates results, and resolves conflicts when agents disagree.
+Three tools registered in the tool registry:
 
-The engineering question this project addresses: how do you coordinate autonomous workers who each have partial information, may produce contradictory outputs, and operate concurrently on overlapping state?
+**`web_search`** — Tavily-powered web search. Returns structured excerpts with source URLs. Non-deterministic, cached with 1-hour TTL.
 
-**Core concepts to be demonstrated:**
-- Supervisor / worker agent graph topology
-- LangGraph `Send` API for true parallel agent fan-out
-- Inter-agent result aggregation with conflict resolution
-- Shared vs. isolated state across concurrent agent runs
-- Partial failure handling when one agent in a group fails
+**`calculator`** — Safe mathematical expression evaluator. Explicit allowlist of builtins, no `eval()` on raw LLM strings. Deterministic, cached.
 
----
+**`reasoning`** — Structured LLM-powered analysis over accumulated findings. Applies `analyze | compare | critique | synthesize | identify_gaps` reasoning modes. Not cached (non-deterministic).
 
-### 📍 [Codebase Intelligence Agent](./codebase-intelligence-agent/README.md)
-
-An autonomous agent that reasons over a codebase — not just retrieves from it. Given a question about a system ("why does this service fail under high load?", "what would break if I changed this interface?"), the agent traverses the codebase graph, traces dependencies, executes targeted analysis tools, and produces a structured technical assessment.
-
-The engineering question: how do you build an agent that reasons about structure rather than just surfacing text? Code is not a document — it is a graph of dependencies, call sites, type contracts, and behavioral invariants. The agent architecture must reflect that.
-
-**Core concepts to be demonstrated:**
-- Code graph traversal as a tool primitive
-- Multi-hop reasoning across dependency chains
-- Static analysis tool integration (AST parsing, type checking, import tracing)
-- Confidence-weighted finding aggregation across heterogeneous tool outputs
-- Structured technical report generation with traceable evidence
+Adding a new tool requires: implementing `async def tool_fn(input: dict) -> str`, defining a `ToolSchema` with description and JSON Schema input spec, and calling `tool_registry.register()`. The Tool Selector discovers it automatically on the next run.
 
 ---
 
-### 📍 [AI Observability Agent](./ai-observability-agent/README.md)
+## Project Structure
 
-An autonomous agent that monitors, diagnoses, and explains the behavior of other AI systems. Given access to LLM traces, agent execution logs, and evaluation results, it identifies behavioral regressions, anomalous routing patterns, cost spikes, and quality degradations — and produces a diagnostic report with root cause hypotheses.
-
-The engineering question: what does observability mean when the system being observed is itself non-deterministic? Traditional anomaly detection assumes stable baselines. LLM behavior drifts with model updates, prompt changes, and input distribution shifts. The agent must reason about non-stationarity, not just threshold violations.
-
-**Core concepts to be demonstrated:**
-- Trace ingestion and structured parsing from LangSmith / OpenTelemetry
-- Behavioral baseline modeling over rolling windows
-- Anomaly classification: routing anomalies vs. quality degradations vs. cost anomalies
-- Hypothesis generation with supporting evidence from trace data
-- Recursive evaluation: an AI system evaluating AI systems
-
----
-
-### 📍 [Streaming Agent Runtime](./streaming-agent-runtime/README.md)
-
-A real-time agent execution runtime with streaming intermediate outputs, live state inspection, and reactive client-side rendering. The focus is the execution infrastructure, not the agent logic: how do you make a long-running autonomous process feel responsive, inspectable, and controllable to an operator watching it run?
-
-The engineering question: what does the interface between an autonomous execution graph and a real-time client look like when the graph is stateful, non-deterministic, and potentially running for minutes?
-
-**Core concepts to be demonstrated:**
-- LangGraph checkpoint-driven SSE event stream
-- Node-level event schema design for client consumption
-- Backpressure handling in async event generators
-- Client-side state reconstruction from event stream
-- Mid-run intervention: pause, inspect, resume, abort
-
----
-
-## Engineering Principles
-
-These principles apply across every project in this repository:
-
-**Explicit over implicit.** State is typed and named. Routing is a function. Errors are values. Nothing important is inferred from context.
-
-**Deterministic orchestration.** Non-determinism lives in the model. The orchestration layer is deterministic. These concerns do not mix.
-
-**Narrow LLM contracts.** Every LLM call has a defined input structure, a defined output schema, and validation on both sides. The LLM is never handed ambiguous context and asked to figure it out.
-
-**Failure is a state, not an exception.** Systems degrade gracefully. Every failure mode is represented in the state model. Error paths are as well-designed as success paths.
-
-**Separation of concerns at the node level.** Each node in a graph has one responsibility: one class of decision or one type of execution. Nodes that do multiple things become untestable and unmaintainable.
-
-**Prompts are configuration, not code.** Prompt templates live in dedicated files, separate from node logic. Prompt iteration is the highest-frequency change in an agent system. The architecture accommodates this.
-
-**Observability is not optional.** Every run produces structured logs with correlation IDs. Every LLM call is traceable. Every state transition is checkpointed. You cannot improve what you cannot observe.
+```
+autonomous-research-agent/
+├── api/
+│   ├── routes.py          # POST /research/run, GET /{id}, GET /{id}/stream
+│   └── schemas.py         # API-layer Pydantic models (separate from state)
+├── db/
+│   ├── checkpointer.py    # AsyncPostgresSaver singleton
+│   ├── database.py        # Async SQLAlchemy engine
+│   ├── models.py          # ResearchRun table
+│   ├── run_repository.py  # Run CRUD
+│   └── cache.py           # Redis tool result cache
+├── graph/
+│   ├── engine.py          # StateGraph assembly, routing function
+│   ├── state.py           # ResearchState + all sub-models
+│   └── nodes/
+│       ├── planner.py
+│       ├── tool_selector.py
+│       ├── tool_executor.py
+│       ├── evaluator.py
+│       └── synthesizer.py
+├── tools/
+│   ├── registry.py        # ToolRegistry singleton
+│   ├── web_search.py
+│   ├── calculator.py
+│   └── reasoning.py
+├── llm/
+│   ├── client.py          # Retry logic, structured output, token tracking
+│   └── prompts/           # Prompt templates isolated from node logic
+│       ├── planner.py
+│       ├── tool_selector.py
+│       ├── evaluator.py
+│       └── synthesizer.py
+├── config.py
+├── logging_config.py
+├── main.py
+├── docker-compose.yml
+├── Dockerfile
+└── tests/
+    ├── test_nodes/
+    └── test_graph/
+```
 
 ---
 
-Each project is a self-contained system with its own stack, README, and test suite. Projects share design philosophy but are not architecturally coupled.
+## API
+
+### Create a research run
+
+```bash
+POST /research/run
+Content-Type: application/json
+
+{
+  "topic": "Impact of LLM coding tools on developer productivity",
+  "max_iterations": 10
+}
+```
+
+Returns `HTTP 202` immediately:
+
+```json
+{
+  "run_id": "3f8a2c1d-...",
+  "status": "queued",
+  "message": "Research run enqueued. Poll GET /research/{run_id} for status."
+}
+```
+
+### Poll for status
+
+```bash
+GET /research/{run_id}
+```
+
+```json
+{
+  "run_id": "3f8a2c1d-...",
+  "status": "complete",
+  "iterations": 7,
+  "overall_confidence": 0.81,
+  "subproblem_count": 4,
+  "completion_reason": "all_subproblems",
+  "final_report": "# Research Report: ...",
+  "completed_at": "2025-01-15T14:23:07Z"
+}
+```
+
+Status values: `queued` → `running` → `complete | failed | ceiling_hit`
+
+### Stream progress
+
+```bash
+GET /research/{run_id}/stream
+```
+
+Server-Sent Events. One event per completed node, replayed from LangGraph checkpoints:
+
+```
+data: {"iteration": 3, "next_action": "evaluate", "overall_confidence": 0.61, ...}
+data: {"iteration": 4, "next_action": "select_tool", "overall_confidence": 0.61, ...}
+data: {"event": "complete", "run_id": "3f8a2c1d-..."}
+```
+
+### Inspect checkpoint state
+
+```bash
+GET /research/{run_id}/state
+```
+
+Returns the raw LangGraph checkpoint — full `ResearchState` at the last node boundary. Intended for debugging.
 
 ---
 
-## Who This Is For
+## Running Locally
 
-This repository is built for engineers who:
+### Prerequisites
 
-- Come from backend, distributed systems, or platform engineering and want to understand AI systems at depth
-- Are building production AI infrastructure and want reference architectures for autonomous workflows
-- Find most AI tutorials too shallow and want to understand the real engineering tradeoffs
-- Are interested in the boundary between software engineering and AI systems design
+- Docker + Docker Compose
+- OpenAI API key
+- Tavily API key (free tier available at tavily.com)
+- LangSmith API key (optional, for tracing)
 
-It is not aimed at researchers, data scientists, or engineers primarily interested in model performance. The focus is system design, not model behavior.
+### Setup
+
+```bash
+git clone https://github.com/your-username/autonomous-ai-systems
+cd autonomous-ai-systems/autonomous-research-agent
+
+cp .env.example .env
+# Edit .env with your API keys
+
+docker compose up --build
+```
+
+### Environment variables
+
+```bash
+OPENAI_API_KEY=sk-...
+TAVILY_API_KEY=tvly-...
+LANGCHAIN_API_KEY=ls__...          # optional
+LANGCHAIN_TRACING_V2=true          # optional
+LANGCHAIN_PROJECT=research-agent
+DATABASE_URL=postgresql://research_agent:research_agent@postgres:5432/research_agent
+REDIS_URL=redis://redis:6379/0
+```
+
+### Run a query
+
+```bash
+# Create run
+curl -X POST http://localhost:8000/research/run \
+  -H "Content-Type: application/json" \
+  -d '{"topic": "The engineering tradeoffs of vector databases vs traditional search"}'
+
+# Poll (replace with your run_id)
+curl http://localhost:8000/research/3f8a2c1d-...
+
+# Stream
+curl -N http://localhost:8000/research/3f8a2c1d-.../stream
+```
+
+### Run tests
+
+```bash
+pip install -r requirements.txt
+pytest tests/ -v
+```
+
+Tests use mocked LLM calls. No API keys required. No network calls.
 
 ---
 
-## Tech Philosophy
+## Engineering Design Decisions
 
-Every project uses the minimum stack required to demonstrate the engineering concept clearly. No framework fetishism. No unnecessary abstractions.
+**Why LangGraph over custom graph execution?**
+LangGraph provides first-class cycle support (standard LangChain can't loop without hacks), built-in checkpointing at node boundaries, and the `Send` API for parallel fan-out. The alternative — a hand-rolled executor — would need to reimplement all three.
 
-Where LangGraph is used, it earns its place because the cycle support and checkpointing are genuinely non-trivial to replicate. Where FastAPI is used, it is because the async model fits the workload. Where Pydantic is used, it is because type-enforced contracts between components are not optional in systems that call non-deterministic APIs.
+**Why is `next_action` a state field rather than hardcoded graph edges?**
+Routing logic belongs to the Evaluator, not the graph topology. When the Evaluator writes `next_action = "synthesize"`, the graph's single routing function reads it. This means routing behavior can change without touching graph wiring — and all routing decisions are inspectable in state.
 
-The stack evolves as the problems require. Future projects may use different tools where those tools are a better fit for the problem.
+**Why does the Evaluator run deterministic guards before the LLM call?**
+Iteration ceiling checks, "no findings" guards, and "all subproblems done" checks are deterministic. Burning a token-priced LLM call to discover you've hit your iteration ceiling is wasteful and adds latency. The LLM is only called when human-quality judgment is actually required.
+
+**Why separate `ResearchFinding` from raw `ToolCall` output?**
+`ToolCall` records what happened — input, raw output, error, latency. `ResearchFinding` records what was learned — interpreted content, source, relevance. The Evaluator works on findings, not raw tool output. This separation prevents the Evaluator prompt from receiving 3,000 characters of raw HTML-stripped search results.
+
+**Why does `call_llm_structured` feed validation errors back to the LLM?**
+Blind retry sends the same prompt and gets the same malformed output. Feeding the Pydantic validation error back as a correction prompt is materially more effective — the LLM knows specifically what was wrong and corrects it. Structured output compliance improves significantly on second attempt with error context.
+
+**Why is the tool executor the only place `iterations` is incremented?**
+Because the executor runs exactly once per loop cycle — after selection, before evaluation. This makes `iterations` a reliable loop counter regardless of which tool was selected or whether it succeeded. Any other increment point risks double-counting on retry paths.
 
 ---
 
-## Contributing
+## Known Limitations
 
-This is a personal engineering laboratory. It is public because the architectural patterns and design decisions may be useful to other engineers working on similar problems.
-
-If you find an error, a better architectural approach, or a genuine improvement, issues and pull requests are welcome. Please keep contributions focused on engineering substance — architecture, correctness, and clarity — rather than stylistic preferences.
+- **Synchronous tool execution within a cycle.** Tools execute sequentially within each iteration. Parallel subproblem execution (LangGraph `Send` API) is the next planned capability.
+- **Context window management is simple.** Findings are truncated to 800 chars in the Synthesizer prompt. A production system would implement token-aware truncation with summarization fallback.
+- **No document ingestion.** Web search, calculator, and reasoning are the initial tool set. PDF/document tools and a vector retrieval tool are planned.
+- **Single-worker background execution.** FastAPI `BackgroundTasks` runs in-process. For high-volume deployments, replace with Celery + Redis queue or equivalent.
 
 ---
 
-*Built by an engineer who thinks AI systems deserve the same architectural discipline as any other production software.*
+## Part of
+
+This project is the first system in the [`autonomous-ai-systems`](../README.md) repository — an engineering lab for production-inspired autonomous AI architectures.

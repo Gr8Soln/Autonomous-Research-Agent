@@ -1,4 +1,4 @@
-from tools.registry import ToolSchema, tool_registry
+from app.tools.registry import ToolSchema, tool_registry
 
 WEB_SEARCH_SCHEMA = ToolSchema(
     name="web_search",

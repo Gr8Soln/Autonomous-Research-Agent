@@ -1,4 +1,4 @@
-from graph.state import ResearchState
+from app.graph.state import ResearchState
 
 
 async def tool_selector_node(state: ResearchState) -> dict:

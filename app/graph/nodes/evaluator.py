@@ -1,4 +1,4 @@
-from graph.state import ResearchState
+from app.graph.state import ResearchState
 
 
 async def evaluator_node(state: ResearchState) -> dict:

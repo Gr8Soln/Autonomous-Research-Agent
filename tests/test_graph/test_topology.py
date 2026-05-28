@@ -1,6 +1,6 @@
 import pytest
-from graph.engine import build_graph
-from graph.state import ResearchState
+from app.graph.engine import build_graph
+from app.graph.state import ResearchState
 
 
 def test_graph_compiles():

@@ -1,10 +1,10 @@
 import uuid
 
 from fastapi import APIRouter, HTTPException
-from graph.engine import research_graph
-from graph.state import ResearchState
+from app.graph.engine import research_graph
+from app.graph.state import ResearchState
 
-from api.schemas import ResearchRequest, ResearchResponse
+from app.api.schemas import ResearchRequest, ResearchResponse
 
 router = APIRouter(prefix="/research", tags=["research"])
 
