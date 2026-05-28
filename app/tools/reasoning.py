@@ -1,4 +1,4 @@
-from tools.registry import ToolSchema, tool_registry
+from app.tools.registry import ToolSchema, tool_registry
 
 REASONING_SCHEMA = ToolSchema(
     name="reasoning",
