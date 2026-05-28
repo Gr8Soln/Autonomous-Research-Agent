@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from app.graph.state import ResearchState
+from graph.state import ResearchState
 
 
 async def synthesizer_node(state: ResearchState) -> dict:

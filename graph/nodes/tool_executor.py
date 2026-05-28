@@ -1,6 +1,6 @@
 import uuid
 
-from app.graph.state import ResearchState, ToolCall
+from graph.state import ResearchState, ToolCall
 
 
 async def tool_executor_node(state: ResearchState) -> dict:
